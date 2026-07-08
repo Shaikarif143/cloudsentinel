@@ -1,0 +1,8 @@
+variable "name_prefix" { type = string }
+variable "dynamodb_table_arn" { type = string }
+variable "dynamodb_table_name" { type = string }
+variable "sns_topic_arn" { type = string }
+variable "scan_interval_minutes" { type = number }
+variable "enable_auto_remediation" { type = bool }
+variable "scanner_source_dir" { type = string }
+variable "remediation_source_dir" { type = string }
