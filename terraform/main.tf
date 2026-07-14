@@ -122,10 +122,48 @@ data "aws_iam_policy_document" "cloudtrail_bucket" {
     sid       = "AWSCloudTrailWrite"
     effect    = "Allow"
     actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.log_archive.arn}/cloudtrail/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    resources = ["${aws_s3_bucket.log_archive.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
     principals {
       type        = "Service"
       identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+  }
+
+  statement {
+    sid       = "AWSConfigBucketPermissionsCheck"
+    effect    = "Allow"
+    actions   = ["s3:GetBucketAcl"]
+    resources = [aws_s3_bucket.log_archive.arn]
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid       = "AWSConfigBucketExistenceCheck"
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.log_archive.arn]
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid       = "AWSConfigBucketDelivery"
+    effect    = "Allow"
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.log_archive.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/Config/*"]
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
     }
     condition {
       test     = "StringEquals"
@@ -148,7 +186,7 @@ resource "aws_cloudtrail" "main" {
 }
 
 # ---------------------------------------------------------------------------
-# AWS Config + Security Hub
+# AWS Config
 # ---------------------------------------------------------------------------
 module "config" {
   source      = "./modules/config"
@@ -156,9 +194,17 @@ module "config" {
   bucket_name = aws_s3_bucket.log_archive.id
 }
 
-module "securityhub" {
-  source = "./modules/securityhub"
-}
+# ---------------------------------------------------------------------------
+# Security Hub — DISABLED for now.
+# Your account returned "SubscriptionRequiredException" when enabling
+# Security Hub, which usually means the AWS account isn't yet fully
+# activated for premium services (e.g. payment method not verified, or
+# a brand-new account still in a restricted state). Re-enable this once
+# that's sorted out — nothing else in this stack depends on it.
+# ---------------------------------------------------------------------------
+# module "securityhub" {
+#   source = "./modules/securityhub"
+# }
 
 # ---------------------------------------------------------------------------
 # Lambdas: scanner + remediation
