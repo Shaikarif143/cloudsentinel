@@ -64,7 +64,11 @@ resource "aws_iam_role_policy" "scanner" {
         Sid      = "WriteFindings"
         Effect   = "Allow"
         Action   = ["dynamodb:PutItem", "dynamodb:Query", "dynamodb:BatchWriteItem"]
-        Resource = [var.dynamodb_table_arn, "${var.dynamodb_table_arn}/index/*"]
+        Resource = [
+          var.dynamodb_table_arn,
+          "${var.dynamodb_table_arn}/index/*",
+          var.compliance_history_table_arn
+        ]
       },
       {
         Sid      = "Notify"

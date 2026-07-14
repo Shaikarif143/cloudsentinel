@@ -214,6 +214,7 @@ module "lambda" {
 
   name_prefix             = local.name_prefix
   dynamodb_table_arn      = module.dynamodb.table_arn
+  compliance_history_table_arn = module.dynamodb.compliance_history_table_arn
   dynamodb_table_name     = module.dynamodb.table_name
   sns_topic_arn           = module.sns.topic_arn
   scan_interval_minutes   = var.scan_interval_minutes
